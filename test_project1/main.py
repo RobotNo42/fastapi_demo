@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Query
-from pydantic import BaseModel
+from fastapi import FastAPI, Query,Body
+from pydantic import BaseModel, HttpUrl
 from starlette.requests import Request
 from typing import List
 from fastapi.templating import Jinja2Templates
@@ -7,10 +7,15 @@ from fastapi.templating import Jinja2Templates
 app = FastAPI()
 templates = Jinja2Templates(directory='templates')
 class Item(BaseModel):
-    name: str
+    name: HttpUrl
     description: str = None
     price: float
     tax: float = None
+
+
+class User(BaseModel):
+    username: str
+    full_name: str = None
 
 
 @app.get("/")
@@ -18,11 +23,9 @@ async def get_index(request: Request):
     return templates.TemplateResponse('index.html', {'request': request})
 
 
-@app.get("/items/")
-async def read_items(q: str = Query(None, alias="item-query")):
-    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
-    if q:
-        results.update({"q": q})
+@app.put("/items/{item_id}")
+async def update_item(*, item_id: int, item: Item = Body(..., embed=True)):
+    results = {"item_id": item_id, "item": item}
     return results
 
 
